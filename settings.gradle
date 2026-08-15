@@ -1,4 +1,4 @@
 rootProject.name = 'prometria'
 
 include 'prometria-core'
-include 'prometria-spring-starter'
+include 'prometria-spring-boot-starter'

@@ -1,20 +1,115 @@
 plugins {
-    id 'java'
+    id 'io.spring.dependency-management' version '1.1.7' apply false
 }
 
-group = 'io.github.dodogamaru'
-version = '1.0-SNAPSHOT'
+subprojects {
+    apply plugin: 'java-library'
+    apply plugin: 'maven-publish'
+    apply plugin: 'io.spring.dependency-management'
 
-repositories {
-    mavenCentral()
-}
+    group = 'io.github.dodogamaru'
+    version = '0.0.1-SNAPSHOT'
 
-dependencies {
-    testImplementation platform('org.junit:junit-bom:6.0.0')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-}
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
+        withSourcesJar()
+        withJavadocJar()
+    }
 
-test {
-    useJUnitPlatform()
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
+        options.compilerArgs << '-parameters'
+    }
+
+    tasks.withType(Javadoc).configureEach {
+        options.addStringOption('Xdoclint:none', '-quiet')
+    }
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencyManagement {
+        imports {
+            mavenBom 'org.springframework.boot:spring-boot-dependencies:3.5.5'
+        }
+    }
+
+    dependencies {
+        testImplementation 'org.junit.jupiter:junit-jupiter'
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    }
+
+    test {
+        useJUnitPlatform {
+            excludeTags 'integration'
+        }
+    }
+
+    tasks.register('integrationTest', Test) {
+        description = 'Runs integration tests. A running Prometheus server is required.'
+        group = 'verification'
+        testClassesDirs = sourceSets.test.output.classesDirs
+        classpath = sourceSets.test.runtimeClasspath
+        useJUnitPlatform {
+            includeTags 'integration'
+        }
+    }
+
+    apply plugin: 'jacoco'
+
+    jacoco {
+        toolVersion = '0.8.13'
+    }
+
+    tasks.named('check') {
+        dependsOn tasks.named('jacocoTestReport')
+    }
+
+    tasks.named('jacocoTestReport', JacocoReport) {
+        dependsOn tasks.named('test')
+        reports {
+            xml.required = true
+            html.required = true
+        }
+    }
+
+    tasks.named('jacocoTestCoverageVerification') {
+        dependsOn tasks.named('test')
+        violationRules {
+            rule {
+                limit {
+                    minimum = project.hasProperty('jacocoMinimumCoverage')
+                            ? project.property('jacocoMinimumCoverage')
+                            : 0.50
+                }
+            }
+        }
+    }
+
+    tasks.register('jacocoMergedReport', JacocoReport) {
+        description = 'Coverage report combining unit and integration test executions.'
+        group = 'verification'
+        dependsOn tasks.named('test'), tasks.named('integrationTest')
+        executionData = files(
+                layout.buildDirectory.file('jacoco/test.exec'),
+                layout.buildDirectory.file('jacoco/integrationTest.exec')
+        )
+        sourceSets sourceSets.main
+        classDirectories.from = sourceSets.main.output.classesDirs
+        reports {
+            xml.required = true
+            html.required = true
+        }
+    }
+
+    publishing {
+        publications {
+            maven(MavenPublication) {
+                from components.java
+            }
+        }
+    }
 }

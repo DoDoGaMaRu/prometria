@@ -1,20 +1,15 @@
-plugins {
-    id 'java'
-}
-
-group = 'io.github.dodogamaru'
-version = '1.0-SNAPSHOT'
-
-repositories {
-    mavenCentral()
+// unit-test instruction coverage floor, enforced by jacocoTestCoverageVerification (part of check)
+ext {
+    jacocoMinimumCoverage = 0.50
 }
 
 dependencies {
-    testImplementation platform('org.junit:junit-bom:6.0.0')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-}
+    api 'com.fasterxml.jackson.core:jackson-databind'
 
-test {
-    useJUnitPlatform()
+    implementation 'org.apache.commons:commons-text:1.12.0'
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    testImplementation 'com.tngtech.archunit:archunit-junit5:1.4.2'
 }
