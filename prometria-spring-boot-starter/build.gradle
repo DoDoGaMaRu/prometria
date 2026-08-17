@@ -1,0 +1,15 @@
+// unit-test instruction coverage floor, enforced by jacocoTestCoverageVerification (part of check)
+ext {
+    jacocoMinimumCoverage = 0.90
+}
+
+dependencies {
+    api project(':prometria-core')
+
+    implementation 'org.springframework:spring-context'
+    compileOnly 'org.springframework.boot:spring-boot-autoconfigure'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.boot:spring-boot'
+    testImplementation 'org.springframework.boot:spring-boot-autoconfigure'
+}
